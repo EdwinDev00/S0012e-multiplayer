@@ -6,7 +6,7 @@
 #include "physics.h"
 #include "core/idpool.h"
 #include "render/gltf.h"
-#include "debugrender.h"
+#include "render/debugrender.h"
 #include "core/random.h"
 #include "core/cvar.h"
 #include <iostream>

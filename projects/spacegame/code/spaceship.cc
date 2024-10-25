@@ -1,8 +1,8 @@
 #include "config.h"
 #include "spaceship.h"
-#include "render/input/inputserver.h"
+#include "input/inputserver.h"
 #include "render/cameramanager.h"
-#include "render/physics.h"
+#include "physics/physics.h"
 #include "render/debugrender.h"
 #include "render/particlesystem.h"
 

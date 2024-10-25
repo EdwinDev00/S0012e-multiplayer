@@ -26,8 +26,6 @@ SET(files_render_render
 	grid.h
 	grid.cc
 	lightsources.h
-	physics.h
-	physics.cc
 	resourceid.h
 	particlesystem.cc
 	particlesystem.h
@@ -39,18 +37,6 @@ SET(files_render_render
 	gltf.h
 	)
 SOURCE_GROUP("render" FILES ${files_render_render})
-
-SET(files_render_input
-	input/gamepad.h
-	input/gamepad.cc
-	input/inputserver.h
-	input/inputserver.cc
-	input/key.h
-	input/key.cc
-	input/keyboard.h
-	input/mouse.h
-	)
-SOURCE_GROUP("input" FILES ${files_render_input})
 
 SET(files_render
 	${files_render_display}

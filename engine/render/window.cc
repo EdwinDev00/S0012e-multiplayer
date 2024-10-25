@@ -7,7 +7,7 @@
 #include <imgui.h>
 #include "imgui_impl_opengl3.h"
 #include "imgui_impl_glfw.h"
-#include "render/input/inputserver.h"
+#include "input/inputserver.h"
 
 namespace Display
 {
