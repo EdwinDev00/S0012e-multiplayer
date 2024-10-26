@@ -15,9 +15,9 @@
 #include "render/lightserver.h"
 #include "render/debugrender.h"
 #include "core/random.h"
-#include "render/input/inputserver.h"
+#include "input/inputserver.h"
 #include "core/cvar.h"
-#include "render/physics.h"
+#include "physics/physics.h"
 #include <chrono>
 #include "spaceship.h"
 
@@ -212,6 +212,11 @@ SpaceGameApp::Run()
         }
 
         RenderDevice::Draw(ship.model, ship.transform);
+        if(ship.projectiles.size() > 0)
+        {
+            for (auto const& proj : ship.projectiles)
+                RenderDevice::Draw(proj.model, proj.transform);
+        }
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);

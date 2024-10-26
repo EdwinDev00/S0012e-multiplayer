@@ -59,6 +59,9 @@ SpaceShip::Update(float dt)
     {
         this->currentSpeed = 0;
     }
+
+    if (kbd->pressed[Key::Space]) OnFire();
+
     vec3 desiredVelocity = vec3(0, 0, this->currentSpeed);
     desiredVelocity = this->transform * vec4(desiredVelocity, 0.0f);
 
@@ -100,6 +103,18 @@ SpaceShip::Update(float dt)
     this->particleEmitterRight->data.endSpeed = 0.0f + (3.0f * t);
     //this->particleEmitter->data.decayTime = 0.16f;//+ (0.01f  * t);
     //this->particleEmitter->data.randomTimeOffsetDist = 0.06f;/// +(0.01f * t);
+
+    if(projectiles.size() > 0)
+    {
+        for(auto it = projectiles.begin(); it != projectiles.end();)
+        {
+            it->Update(dt);
+
+            if (it->CheckCollision() || it->hit)
+                it = projectiles.erase(it);
+            else it++;
+        }
+    }
 }
 
 bool
@@ -125,4 +140,16 @@ SpaceShip::CheckCollisions()
     }
     return hit;
 }
+
+void SpaceShip::OnFire()
+{
+    glm::vec3 projectileDirection = glm::normalize(glm::vec4(glm::vec3(transform[2]),0)); //forward direction of the spaceship
+    glm::vec3 spawnLocation = position + projectileDirection * 2.0f; // constant value = offset from the space ship
+
+    // initalize by transform 4x4
+    projectiles.emplace_back(glm::translate(glm::mat4(1.0f), spawnLocation) * glm::mat4_cast(this->orientation));
+    // initalize by pos , direction , orientation (quat)
+    //projectiles.emplace_back(spawnLocation, projectileDirection,this->orientation);
+}
+
 }
