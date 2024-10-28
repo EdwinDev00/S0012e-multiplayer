@@ -2,8 +2,8 @@
 #include "spaceship.h"
 #include "input/inputserver.h"
 #include "render/cameramanager.h"
-#include "physics/physics.h"
-#include "render/debugrender.h"
+//#include "physics/physics.h"
+//#include "render/debugrender.h"
 #include "render/particlesystem.h"
 
 using namespace Input;
@@ -120,6 +120,9 @@ SpaceShip::Update(float dt)
 bool
 SpaceShip::CheckCollisions()
 {
+    //TODO: colliding with other players, asteroids, laser etc
+    // Skip self collision
+
     glm::mat4 rotation = (glm::mat4)orientation;
     bool hit = false;
     for (int i = 0; i < 8; i++)
@@ -130,12 +133,13 @@ SpaceShip::CheckCollisions()
         Physics::RaycastPayload payload = Physics::Raycast(position, dir, len);
 
         // debug draw collision rays
-        // Debug::DrawLine(pos, pos + dir * len, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
+        Debug::DrawLine(pos, pos + dir * len, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
 
         if (payload.hit)
         {
-            Debug::DrawDebugText("HIT", payload.hitPoint, glm::vec4(1, 1, 1, 1));
+            this->position = glm::vec3(0, 0, 40);
             hit = true;
+            Debug::DrawDebugText("HIT", payload.hitPoint, glm::vec4(1, 1, 1, 1));
         }
     }
     return hit;

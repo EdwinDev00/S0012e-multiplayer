@@ -179,6 +179,14 @@ SpaceGameApp::Run()
 
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
+    //Need to create these for collision currently
+    ship.colliderMesh = Physics::LoadColliderMesh("assets/space/spaceship_physics.glb");
+    //Create the collider id
+    ship.colliderID = Physics::CreateCollider(ship.colliderMesh, ship.transform);
+
+    SpaceShip ship2;
+    ship2.model = LoadModel("assets/space/spaceship.glb");
+    ship2.transform[3] *= glm::vec4(5, 1, 1,1);
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -202,8 +210,7 @@ SpaceGameApp::Run()
         ship.Update(dt);
         ship.CheckCollisions();
 
-        // Draw some debug text
-        Debug::DrawDebugText("FOOBAR", glm::vec3(0), {1,0,0,1});
+        ship2.CheckCollisions();
 
         // Store all drawcalls in the render device
         for (auto const& asteroid : asteroids)
@@ -212,6 +219,7 @@ SpaceGameApp::Run()
         }
 
         RenderDevice::Draw(ship.model, ship.transform);
+        RenderDevice::Draw(ship2.model, ship2.transform);
         if(ship.projectiles.size() > 0)
         {
             for (auto const& proj : ship.projectiles)
