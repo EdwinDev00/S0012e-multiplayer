@@ -6,6 +6,8 @@
 //#include "render/debugrender.h"
 #include "render/particlesystem.h"
 
+#include <iostream>
+
 using namespace Input;
 using namespace glm;
 using namespace Render;
@@ -106,12 +108,22 @@ SpaceShip::Update(float dt)
 
     if(projectiles.size() > 0)
     {
+        int hitID = -1;
         for(auto it = projectiles.begin(); it != projectiles.end();)
         {
             it->Update(dt);
-
-            if (it->CheckCollision() || it->hit)
-                it = projectiles.erase(it);
+            RenderDevice::Draw(it->model, it->transform);
+            if (it->CheckCollision(hitID) || it->hit)
+            {
+                if (hitID == this->colliderID.index)
+                {
+                    //PACKAGE THE DATA ABOUT THE LASER AND SEND IT TO THE SERVER AWAITING ACTION TO HANDLE THE HIT OBJECT TO DIE AND RESPAWN
+                    std::cout << "HIT THIS SPACE SHIP" << "\n";
+                    std::cout << "TODO PACKAGE DATA" << "\n";
+                }
+                    
+                it = projectiles.erase(it);               
+            }
             else it++;
         }
     }
@@ -120,9 +132,7 @@ SpaceShip::Update(float dt)
 bool
 SpaceShip::CheckCollisions()
 {
-    //TODO: colliding with other players, asteroids, laser etc
-    // Skip self collision
-
+    //IMPROVEMENT COULD USE A BETTER METHOD (currently uses physis.glb for detecting)
     glm::mat4 rotation = (glm::mat4)orientation;
     bool hit = false;
     for (int i = 0; i < 8; i++)

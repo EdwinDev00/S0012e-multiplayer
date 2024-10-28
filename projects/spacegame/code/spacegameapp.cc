@@ -186,7 +186,6 @@ SpaceGameApp::Run()
 
     SpaceShip ship2;
     ship2.model = LoadModel("assets/space/spaceship.glb");
-    ship2.transform[3] *= glm::vec4(5, 1, 1,1);
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -220,11 +219,6 @@ SpaceGameApp::Run()
 
         RenderDevice::Draw(ship.model, ship.transform);
         RenderDevice::Draw(ship2.model, ship2.transform);
-        if(ship.projectiles.size() > 0)
-        {
-            for (auto const& proj : ship.projectiles)
-                RenderDevice::Draw(proj.model, proj.transform);
-        }
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);

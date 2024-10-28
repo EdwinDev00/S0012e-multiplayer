@@ -5,6 +5,7 @@
 #include "physics/physics.h"
 
 
+
 namespace Render
 {
     struct ParticleEmitter;
@@ -46,18 +47,21 @@ struct Projectile
         // Update the transform based on the new position, keeping the initial orientation
         transform = glm::translate(glm::mat4(1), position) * glm::mat4_cast(glm::quatLookAt(direction, glm::vec3(0, 1, 0)));
 
-        Debug::DrawBox(this->transform, glm::vec4(1, 0, 0, 1));
+        //Debug::DrawBox(this->transform, glm::vec4(1, 0, 0, 1));
         if (lifeTime <= 0) Destroy();
     }
 
-    bool CheckCollision()
+    bool CheckCollision(int& colliderID)
     {
-        //check for collision between the projectile and the objects (spaceship asteroids)
-        Physics::RaycastPayload payload = Physics::Raycast(position, direction, speed * lifeTime);
+        Physics::RaycastPayload payload = Physics::Raycast(position, direction, glm::length(position));
         if (payload.hit)
         {
+            colliderID = payload.collider.index;
             Debug::DrawDebugText("bullet", payload.hitPoint, glm::vec4(1, 0, 0, 1));
             hit = true;
+
+            //Appropriate action when hitting space ship
+            //everything else
         }
         return hit;
     }
