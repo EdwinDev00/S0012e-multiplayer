@@ -4,7 +4,7 @@
 #include "render/debugrender.h"
 #include "physics/physics.h"
 
-
+#include <iostream>
 
 namespace Render
 {
@@ -24,9 +24,8 @@ struct Projectile
     float speed = 25.0f;
     float lifeTime = 2;
     
-    //INFO ABOUT THE HIT TARGET 
+    int hitColliderINDEX = -1; //store the obj index (currently keeping track of everything including asteroids) 
 
-    //TODO: CHECK COLLISION WITH THE BULLET AND STORE THOSE DATA
     Projectile(glm::vec3 startPos, glm::vec3 dir, glm::quat orientation) : position(startPos), direction(dir)
     {
         model = Render::LoadModel("assets/space/laser.glb");
@@ -47,21 +46,27 @@ struct Projectile
         // Update the transform based on the new position, keeping the initial orientation
         transform = glm::translate(glm::mat4(1), position) * glm::mat4_cast(glm::quatLookAt(direction, glm::vec3(0, 1, 0)));
 
+        if(CheckCollision())
+        {
+            //PACKAGE THE LASER AND SEND THE HITCOLLIDER INDEX AS MESSAGE
+            //SERVER CHECK THE HITCOLLIDER INDEX AND THE LASER OWNER (server resolve skip checking against the owner of the laser)
+            //Collider list need to be accessed inside the server
+            Destroy();
+        }
+
         //Debug::DrawBox(this->transform, glm::vec4(1, 0, 0, 1));
         if (lifeTime <= 0) Destroy();
     }
 
-    bool CheckCollision(int& colliderID)
+    bool CheckCollision()
     {
-        Physics::RaycastPayload payload = Physics::Raycast(position, direction, glm::length(position));
+        Physics::RaycastPayload payload = Physics::Raycast(position, direction, glm::length(direction));
         if (payload.hit)
         {
-            colliderID = payload.collider.index;
-            Debug::DrawDebugText("bullet", payload.hitPoint, glm::vec4(1, 0, 0, 1));
+            hitColliderINDEX = payload.collider.index;
+            std::cout << hitColliderINDEX << "\n";
+            Debug::DrawDebugText("HIT LASER", payload.hitPoint, glm::vec4(1, 1, 1, 1));
             hit = true;
-
-            //Appropriate action when hitting space ship
-            //everything else
         }
         return hit;
     }
@@ -83,7 +88,7 @@ struct SpaceShip
     glm::mat4 transform = glm::mat4(1);
     glm::vec3 linearVelocity = glm::vec3(0);
 
-    //projectile list () pointer
+    //keep track of the projectiles fired by this unit
     std::vector<Projectile> projectiles;
 
     const float normalSpeed = 1.0f;
@@ -103,7 +108,8 @@ struct SpaceShip
     Render::ParticleEmitter* particleEmitterLeft;
     Render::ParticleEmitter* particleEmitterRight;
     float emitterOffset = -0.5f;
-    //Create collider mesh ID
+    
+    //Create collider mesh ID for (collision)
     Physics::ColliderMeshId colliderMesh;
     Physics::ColliderId colliderID;
 
@@ -111,9 +117,7 @@ struct SpaceShip
 
     bool CheckCollisions();
 
-    void OnFire();
     
-
     const glm::vec3 colliderEndPoints[8] = {
         glm::vec3(-1.10657, -0.480347, -0.346542),  // right wing
         glm::vec3(1.10657, -0.480347, -0.346542),  // left wing
@@ -124,6 +128,8 @@ struct SpaceShip
         glm::vec3(-0.279064, -0.10917, -0.98846),   // right back
         glm::vec3(0.279064, -0.10917, -0.98846)   // right back
     };
+
+    void OnFire();
 };
 
 }

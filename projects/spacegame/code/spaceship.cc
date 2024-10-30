@@ -6,8 +6,6 @@
 //#include "render/debugrender.h"
 #include "render/particlesystem.h"
 
-#include <iostream>
-
 using namespace Input;
 using namespace glm;
 using namespace Render;
@@ -16,8 +14,15 @@ namespace Game
 {
 SpaceShip::SpaceShip()
 {
+    // Load the spaceship model and create a collider
+    model = LoadModel("assets/space/spaceship.glb");
+    colliderMesh = Physics::LoadColliderMesh("assets/space/spaceship_physics.glb");
+    colliderID = Physics::CreateCollider(colliderMesh, transform);
+
+    // Initialize particle emitters for the spaceship thrusters
     uint32_t numParticles = 2048;
     this->particleEmitterLeft = new ParticleEmitter(numParticles);
+    this->particleEmitterRight = new ParticleEmitter(numParticles);
     this->particleEmitterLeft->data = {
         .origin = glm::vec4(this->position + (vec3(this->transform[2]) * emitterOffset),1),
         .dir = glm::vec4(glm::vec3(-this->transform[2]), 0),
@@ -35,7 +40,6 @@ SpaceShip::SpaceShip()
         .emitterType = 1,
         .discRadius = 0.020f
     };
-    this->particleEmitterRight = new ParticleEmitter(numParticles);
     this->particleEmitterRight->data = this->particleEmitterLeft->data;
 
     ParticleSystem::Instance()->AddEmitter(this->particleEmitterLeft);
@@ -106,6 +110,7 @@ SpaceShip::Update(float dt)
     //this->particleEmitter->data.decayTime = 0.16f;//+ (0.01f  * t);
     //this->particleEmitter->data.randomTimeOffsetDist = 0.06f;/// +(0.01f * t);
 
+    //TODO handling the actual killing logic when projectile hit a target
     if(projectiles.size() > 0)
     {
         int hitID = -1;
@@ -113,15 +118,8 @@ SpaceShip::Update(float dt)
         {
             it->Update(dt);
             RenderDevice::Draw(it->model, it->transform);
-            if (it->CheckCollision(hitID) || it->hit)
-            {
-                if (hitID == this->colliderID.index)
-                {
-                    //PACKAGE THE DATA ABOUT THE LASER AND SEND IT TO THE SERVER AWAITING ACTION TO HANDLE THE HIT OBJECT TO DIE AND RESPAWN
-                    std::cout << "HIT THIS SPACE SHIP" << "\n";
-                    std::cout << "TODO PACKAGE DATA" << "\n";
-                }
-                    
+            if (it->hit)
+            {     
                 it = projectiles.erase(it);               
             }
             else it++;
@@ -150,6 +148,18 @@ SpaceShip::CheckCollisions()
             this->position = glm::vec3(0, 0, 40);
             hit = true;
             Debug::DrawDebugText("HIT", payload.hitPoint, glm::vec4(1, 1, 1, 1));
+        }
+
+        //TODO is dying by laser
+        if (projectiles.size() > 0)
+        {
+            for(const auto& proj : projectiles) //currently this will never get hit by a projectile
+            {
+                if (proj.hitColliderINDEX == colliderID.index)
+                {
+                    std::cout << "you got hit " << '\n';
+                }
+            }
         }
     }
     return hit;

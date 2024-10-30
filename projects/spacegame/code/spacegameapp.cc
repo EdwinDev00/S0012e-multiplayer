@@ -177,15 +177,16 @@ SpaceGameApp::Run()
         lights[i] = Render::LightServer::CreatePointLight(translation, color, Core::RandomFloat() * 4.0f, 1.0f + (15 + Core::RandomFloat() * 10.0f));
     }
 
+
+    //GAME MANAGER DATA STORAGE
+    /*
+    * SPACESHIP VECTOR which stores all the spaceship in the game (server)
+    * 
+    */
     SpaceShip ship;
-    ship.model = LoadModel("assets/space/spaceship.glb");
-    //Need to create these for collision currently
-    ship.colliderMesh = Physics::LoadColliderMesh("assets/space/spaceship_physics.glb");
-    //Create the collider id
-    ship.colliderID = Physics::CreateCollider(ship.colliderMesh, ship.transform);
 
     SpaceShip ship2;
-    ship2.model = LoadModel("assets/space/spaceship.glb");
+    //ship2.model = LoadModel("assets/space/spaceship.glb");
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
