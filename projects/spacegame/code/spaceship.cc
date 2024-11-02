@@ -12,6 +12,10 @@ using namespace Render;
 
 namespace Game
 {
+
+    //TESTING FOR GAME MANAGER TO STORE FOR THE SERVER
+    std::vector<Projectile> projInWorld;
+
 SpaceShip::SpaceShip()
 {
     // Load the spaceship model and create a collider
@@ -109,22 +113,6 @@ SpaceShip::Update(float dt)
     this->particleEmitterRight->data.endSpeed = 0.0f + (3.0f * t);
     //this->particleEmitter->data.decayTime = 0.16f;//+ (0.01f  * t);
     //this->particleEmitter->data.randomTimeOffsetDist = 0.06f;/// +(0.01f * t);
-
-    //TODO handling the actual killing logic when projectile hit a target
-    if(projectiles.size() > 0)
-    {
-        int hitID = -1;
-        for(auto it = projectiles.begin(); it != projectiles.end();)
-        {
-            it->Update(dt);
-            RenderDevice::Draw(it->model, it->transform);
-            if (it->hit)
-            {     
-                it = projectiles.erase(it);               
-            }
-            else it++;
-        }
-    }
 }
 
 bool
@@ -151,14 +139,16 @@ SpaceShip::CheckCollisions()
         }
 
         //TODO is dying by laser
-        if (projectiles.size() > 0)
+        if (projInWorld.size() > 0)
         {
-            for(const auto& proj : projectiles) //currently this will never get hit by a projectile
+            for(auto it = projInWorld.begin(); it != projInWorld.end();) //currently this will never get hit by a projectile
             {
-                if (proj.hitColliderINDEX == colliderID.index)
+                if (it->hit && it->hitColliderINDEX == this->colliderID.index) //server side to check if the projectile hit and erase message
                 {
                     std::cout << "you got hit " << '\n';
+                    it = projInWorld.erase(it);
                 }
+                else it++;
             }
         }
     }
@@ -169,9 +159,10 @@ void SpaceShip::OnFire()
 {
     glm::vec3 projectileDirection = glm::normalize(glm::vec4(glm::vec3(transform[2]),0)); //forward direction of the spaceship
     glm::vec3 spawnLocation = position + projectileDirection * 2.0f; // constant value = offset from the space ship
+    projInWorld.emplace_back(glm::translate(glm::mat4(1.0f), spawnLocation) * glm::mat4_cast(this->orientation));
 
     // initalize by transform 4x4
-    projectiles.emplace_back(glm::translate(glm::mat4(1.0f), spawnLocation) * glm::mat4_cast(this->orientation));
+   // projectiles.emplace_back(glm::translate(glm::mat4(1.0f), spawnLocation) * glm::mat4_cast(this->orientation));
     // initalize by pos , direction , orientation (quat)
     //projectiles.emplace_back(spawnLocation, projectileDirection,this->orientation);
 }

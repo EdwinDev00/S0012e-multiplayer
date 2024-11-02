@@ -26,6 +26,7 @@ using namespace Render;
 
 namespace Game
 {
+    extern std::vector<Projectile> projInWorld;
 
 //------------------------------------------------------------------------------
 /**
@@ -77,6 +78,34 @@ SpaceGameApp::Open()
 void
 SpaceGameApp::Run()
 {
+    //Server ()
+    /*
+    The server has a somewhat similar loop:
+
+        1.Sample clock to find start time
+        2.Read client user input messages from network
+        3.Execute client user input messages
+        4.Simulate server-controlled objects using simulation time from last full pass
+        5.For each connected client, package up visible objects/world state and send to client
+        6.Sample clock to find end time
+        7.End time minus start time is the simulation time for the next frame
+        In this model, non-player objects run purely on the server, while player objects drive their movements based on incoming packets. Of course, this is not the only possible way to accomplish this task, but it does make sense.
+    */
+
+    //CLIENT USER (MAIN JOB IS RENDER THE SCENE )
+    /*
+    The client's frame loop looks something like the following: (VALVE basic architecture)
+
+        1.Sample clock to find start time
+        2.Sample user input (mouse, keyboard, joystick)
+        3.Package up and send movement command using simulation time
+        4.Read any packets from the server from the network system
+        5.Use packets to determine visible objects and their state
+        6.Render Scene
+        7.Sample clock to find end time
+        8.End time minus start time is the simulation time for the next frame
+    */
+
     int w;
     int h;
     this->window->GetSize(w, h);
@@ -191,6 +220,8 @@ SpaceGameApp::Run()
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
+    std::vector<int> markForDelete;
+
     // game loop
     while (this->window->IsOpen())
 	{
@@ -207,16 +238,24 @@ SpaceGameApp::Run()
             ShaderResource::ReloadShaders();
         }
 
-        ship.Update(dt);
-        ship.CheckCollisions();
-
-        ship2.CheckCollisions();
 
         // Store all drawcalls in the render device
         for (auto const& asteroid : asteroids)
         {
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
+
+        ship.Update(dt);
+
+        for (auto& proj : projInWorld)
+        {
+            proj.Update(dt);
+            RenderDevice::Draw(proj.model, proj.transform);
+            //NEED TO FIND A SOLUTION OF CHECKING SHIPS COLLISION FIRST AFTERWARDS ASTEROIDS/other collision //server handling
+        }
+
+        ship.CheckCollisions();
+        ship2.CheckCollisions();
 
         RenderDevice::Draw(ship.model, ship.transform);
         RenderDevice::Draw(ship2.model, ship2.transform);

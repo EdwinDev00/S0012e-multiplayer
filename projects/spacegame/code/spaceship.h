@@ -51,7 +51,7 @@ struct Projectile
             //PACKAGE THE LASER AND SEND THE HITCOLLIDER INDEX AS MESSAGE
             //SERVER CHECK THE HITCOLLIDER INDEX AND THE LASER OWNER (server resolve skip checking against the owner of the laser)
             //Collider list need to be accessed inside the server
-            Destroy();
+             Destroy();
         }
 
         //Debug::DrawBox(this->transform, glm::vec4(1, 0, 0, 1));
