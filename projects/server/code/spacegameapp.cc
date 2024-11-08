@@ -21,7 +21,7 @@
 #include <chrono>
 #include "spaceship.h"
 
-//#include <enet/enet.h>
+#include <enet/enet.h>
 #include "proto.h"
 
 using namespace Display;
@@ -107,39 +107,39 @@ SpaceGameApp::Open()
 		// set clear color to gray
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        ////Init ENET
-        //if(enet_initialize() != 0)
-        //{
-        //    std::cerr << "An error occurred while initialize ENET\n";
-        //    return false;
-        //}
+        //Init ENET
+        if(enet_initialize() != 0)
+        {
+            std::cerr << "An error occurred while initialize ENET\n";
+            return false;
+        }
 
-        //ENetHost* client = enet_host_create(nullptr, 1, 2, 0, 0);
-        //if(client == nullptr)
-        //{
-        //    std::cerr << "An error occurred while trying to create a ENET Client host \n";
-        //    enet_deinitialize();
-        //    return false;
-        //}
+        ENetHost* client = enet_host_create(nullptr, 1, 2, 0, 0);
+        if(client == nullptr)
+        {
+            std::cerr << "An error occurred while trying to create a ENET Client host \n";
+            enet_deinitialize();
+            return false;
+        }
 
-        ////Connect to server 
-        //ENetAddress address;
-        //enet_address_set_host(&address, "127.0.0.1"); //server ip (current localhost)
-        //address.port = 1234; // server port 
+        //Connect to server 
+        ENetAddress address;
+        enet_address_set_host(&address, "127.0.0.1"); //server ip (current localhost)
+        address.port = 1234; // server port 
 
-        //ENetPeer* peer = enet_host_connect(client, &address, 2, 0);
-        //if(peer == nullptr)
-        //{
-        //    std::cerr << "No available peers for initiating an ENET connection\n";
-        //    enet_host_destroy(client);
-        //    enet_deinitialize();
-        //    return false;
-        //}
+        ENetPeer* peer = enet_host_connect(client, &address, 2, 0);
+        if(peer == nullptr)
+        {
+            std::cerr << "No available peers for initiating an ENET connection\n";
+            enet_host_destroy(client);
+            enet_deinitialize();
+            return false;
+        }
 
-        //clientW = client;
-        //serverpeerW = peer;
-        //
-        //std::cerr << "Succes of initiating an ENET connection\n";
+        clientW = client;
+        serverpeerW = peer;
+        
+        std::cerr << "Succes of initiating an ENET connection\n";
 
 
         RenderDevice::Init();
@@ -393,7 +393,7 @@ SpaceGameApp::RenderUI()
 {
 	if (this->window->IsOpen())
 	{
-#ifndef NDEBUG
+#ifndef DEBUG
         ImGui::Begin("Debug");
         Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
         int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
@@ -404,92 +404,10 @@ SpaceGameApp::RenderUI()
         int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
         if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId))
             Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
-        
         ImGui::End();
-
         Debug::DispatchDebugTextDrawing();
 #endif // !DEBUG
-
-
-        ImGui::Begin("Network Control");
-        ImGui::InputText("Server IP", ipAddress, sizeof(ipAddress));
-
-        if (ImGui::Button("Connect"))
-        {
-            //Initialize ENET if not already done
-            if (!client)
-            {
-                if (enet_initialize() != 0)
-                {
-                    std::cerr << "CLIENT: FAILED TO INITALIZE CLIENT ENET\n";
-                    return;
-                }
-                client = enet_host_create(nullptr, 1, 2, 0, 0);
-            }
-
-            //Connected to the server with the entered IP ADDRESS
-            if (client)
-            {
-                ENetAddress address;
-                enet_address_set_host(&address, ipAddress);
-                address.port = 1234; // server port
-                peer = enet_host_connect(client, &address, 2, 0);
-                if (peer)
-                    std::cout << "ATTEMPTING TO CONNECT TO SERVER...\n";
-                else
-                    std::cout << "NO AVAILABLE PEERS FOR INITIATING CONNECTION.\n";
-
-            }
-        }
-
-        //Host button
-        if(ImGui::Button("Host"))
-        {
-            //CREATE THE SERVER HOST
-            if(!server)
-            {
-                ENetAddress address;
-                address.host = ENET_HOST_ANY;
-                address.port = 1234;
-                server = enet_host_create(&address, 32, 2, 0, 0);
-                if(!server)
-                    std::cout << "ERROR: FAILED TO CREATE SERVER\n";
-                else
-                    std::cout << "SERVER RUNNING, LISTENING ON PORT: "  << address.port << "\n";
-            }
-
-            // Initialize client to connect to the hosted server
-            if (!client)
-            {
-                client = enet_host_create(nullptr, 1, 2, 0, 0);
-            }
-            if (client)
-            {
-                ENetAddress address;
-                enet_address_set_host(&address, "127.0.0.1");  // Connect to localhost
-                address.port = 1234;
-
-                peer = enet_host_connect(client, &address, 2, 0);
-                if (peer)
-                {
-                    std::cout << "Client connected to hosted server.\n";
-                }
-            }
-        }
-
-        // Display connection status
-        if (peer && peer->state == ENET_PEER_STATE_CONNECTED)
-        {
-            ImGui::Text("Status: Connected");
-            isConnected = true;
-        }
-        else
-        {
-            ImGui::Text("Status: Disconnected");
-            isConnected = false;
-        }
-
-        ImGui::End();
+        
 	}
 }
 
