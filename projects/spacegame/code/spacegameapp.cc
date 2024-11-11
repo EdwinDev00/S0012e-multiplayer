@@ -30,52 +30,6 @@ using namespace Render;
 namespace Game
 {
     extern std::vector<Projectile> projInWorld;
-    ENetHost* clientW;
-    ENetPeer* serverpeerW;
-
-    //TODO: SETTING UP THE SERVER AND UDP SOCKET BETWEEN CLIENT AND SERVER
-    //ORGANIZE THE CLIENT SIDE SO it send package to server for testing connection
-    //still needs fixing with the projectile hit with asteroids
-
-    //haven't created the socket yet
-    flatbuffers::Offset<Protocol::InputC2S> SerializeInput(flatbuffers::FlatBufferBuilder& builder, uint64_t time, uint16_t bitmap)
-    {
-        //input message
-        return Protocol::CreateInputC2S(builder, time, bitmap);
-    }
-
-    flatbuffers::Offset<Protocol::TextC2S> SerializeText(flatbuffers::FlatBufferBuilder& builder, const std::string& text)
-    {
-        //text message
-        return Protocol::CreateTextC2S(builder, builder.CreateString(text));
-    }
-
-    void SendInputC2S(ENetPeer* peer, uint64_t time, uint16_t bitmap)
-    {
-        flatbuffers::FlatBufferBuilder builder;
-        auto inputOffset = SerializeInput(builder, time, bitmap);
-        auto packageWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType::PacketType_InputC2S, inputOffset.Union());
-        builder.Finish(packageWrapper);
-
-        ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
-        enet_peer_send(peer, 0, packet);
-        enet_host_flush(clientW);
-    }
-
-    void SendTextC2S(ENetPeer *peer, const std::string &text)
-    {
-        flatbuffers::FlatBufferBuilder builder;
-        auto textOffset = SerializeText(builder, text);
-        auto packageWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType::PacketType_TextC2S, textOffset.Union());
-        builder.Finish(packageWrapper);
-
-        ENetPacket *packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
-        enet_peer_send(peer, 0, packet);
-        enet_host_flush(clientW);
-    }
-
-
-
 //------------------------------------------------------------------------------
 /**
 */
@@ -106,42 +60,6 @@ SpaceGameApp::Open()
 	{
 		// set clear color to gray
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-
-        ////Init ENET
-        //if(enet_initialize() != 0)
-        //{
-        //    std::cerr << "An error occurred while initialize ENET\n";
-        //    return false;
-        //}
-
-        //ENetHost* client = enet_host_create(nullptr, 1, 2, 0, 0);
-        //if(client == nullptr)
-        //{
-        //    std::cerr << "An error occurred while trying to create a ENET Client host \n";
-        //    enet_deinitialize();
-        //    return false;
-        //}
-
-        ////Connect to server 
-        //ENetAddress address;
-        //enet_address_set_host(&address, "127.0.0.1"); //server ip (current localhost)
-        //address.port = 1234; // server port 
-
-        //ENetPeer* peer = enet_host_connect(client, &address, 2, 0);
-        //if(peer == nullptr)
-        //{
-        //    std::cerr << "No available peers for initiating an ENET connection\n";
-        //    enet_host_destroy(client);
-        //    enet_deinitialize();
-        //    return false;
-        //}
-
-        //clientW = client;
-        //serverpeerW = peer;
-        //
-        //std::cerr << "Succes of initiating an ENET connection\n";
-
-
         RenderDevice::Init();
 
 		// set ui rendering function
@@ -161,20 +79,6 @@ SpaceGameApp::Open()
 void
 SpaceGameApp::Run()
 {
-    //Server ()
-    /*
-    The server has a somewhat similar loop:
-
-        1.Sample clock to find start time
-        2.Read client user input messages from network
-        3.Execute client user input messages
-        4.Simulate server-controlled objects using simulation time from last full pass
-        5.For each connected client, package up visible objects/world state and send to client
-        6.Sample clock to find end time
-        7.End time minus start time is the simulation time for the next frame
-        In this model, non-player objects run purely on the server, while player objects drive their movements based on incoming packets. Of course, this is not the only possible way to accomplish this task, but it does make sense.
-    */
-
     //CLIENT USER (MAIN JOB IS RENDER THE SCENE )
     /*
     The client's frame loop looks something like the following: (VALVE basic architecture)
@@ -308,6 +212,46 @@ SpaceGameApp::Run()
     // game loop
     while (this->window->IsOpen())
 	{
+
+        if (client && !isConnected) {
+            ENetEvent event;
+            if (enet_host_service(client, &event, 1000) > 0) {
+                switch (event.type) {
+                    case ENET_EVENT_TYPE_CONNECT:
+                    {
+                        isConnected = true;
+                        std::cout << "Successfully connected to server on port: "
+                            << peer->address.port << std::endl;
+                        //Send a connection package to the server flatbuffer
+                        flatbuffers::FlatBufferBuilder builder; 
+                        auto clientConnectpacket = Protocol::CreateClientConnectS2C(builder, /* uuid */ 1, /* time */ static_cast<uint64_t>(time(nullptr) * 1000));
+                        auto packetWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType_ClientConnectS2C, clientConnectpacket.Union());
+                        builder.Finish(packetWrapper);
+
+                        //send the clientConnectpackage to the server
+                        ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
+                        enet_peer_send(peer, 0, packet);
+                        enet_host_flush(client);
+                        break;
+                    }
+                
+                case ENET_EVENT_TYPE_RECEIVE:
+                    // Process the incoming packet from the server
+                    std::cout << "Received packet from server.\n";
+                    enet_packet_destroy(event.packet);
+                    break;
+
+                case ENET_EVENT_TYPE_DISCONNECT:
+                    std::cout << "Disconnected from server." << std::endl;
+                    isConnected = false;
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        }
+
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
@@ -363,25 +307,17 @@ SpaceGameApp::Run()
 void
 SpaceGameApp::Exit()
 {
-    if(clientW)
+    if(client)
     {
-        //Disconnect from the server
-        //enet_peer_disconnect(serverpeerW, 0);
-        //ENetEvent event;
-        //while(enet_host_service(clientW, &event,3000) > 0)
-        //{
-        //    if (event.type == ENET_EVENT_TYPE_RECIEVE)
-        //        enet_packet_destroy(event.packet);
-        //    else if (event.type == ENET_EVENT_TYPE_DISCONECT)
-        //        break;
-        //}
-        enet_peer_reset(serverpeerW);
-        enet_host_destroy(clientW);
+        enet_peer_reset(peer);
+        enet_host_destroy(client);
         enet_deinitialize();
     }
+    if (server)
+        delete server;
 
-    clientW = nullptr;
-    serverpeerW = nullptr;
+    delete client, peer;
+    client = nullptr, peer = nullptr, server = nullptr;
     this->window->Close();
 }
 
@@ -414,32 +350,28 @@ SpaceGameApp::RenderUI()
         ImGui::Begin("Network Control");
         ImGui::InputText("Server IP", ipAddress, sizeof(ipAddress));
 
-        if (ImGui::Button("Connect"))
+        if (ImGui::Button("Connect") && client == nullptr)
         {
             //Initialize ENET if not already done
-            if (!client)
+            if (enet_initialize() != 0)
             {
-                if (enet_initialize() != 0)
-                {
-                    std::cerr << "CLIENT: FAILED TO INITALIZE CLIENT ENET\n";
-                    return;
-                }
-                client = enet_host_create(nullptr, 1, 2, 0, 0);
+                std::cerr << "CLIENT: FAILED TO INITALIZE CLIENT ENET\n";
+                return;
             }
-
+            
+            client = enet_host_create(nullptr, 1, 2, 0, 0); // Create client host for one connection
+            
+            if (client == nullptr) { std::cerr << "CLIENT: FAILED TO CREATE CLIENT\n";  return; }
+            
             //Connected to the server with the entered IP ADDRESS
-            if (client)
-            {
-                ENetAddress address;
-                enet_address_set_host(&address, ipAddress);
-                address.port = 1234; // server port
-                peer = enet_host_connect(client, &address, 2, 0);
-                if (peer)
-                    std::cout << "ATTEMPTING TO CONNECT TO SERVER...\n";
-                else
-                    std::cout << "NO AVAILABLE PEERS FOR INITIATING CONNECTION.\n";
-
-            }
+            ENetAddress address;
+            enet_address_set_host_ip(&address, ipAddress); //IP FROM IMGUI TEXT
+            address.port = 1234; // server port
+            peer = enet_host_connect(client, &address, 2, 0); //ATTEMPT TO CONNECT
+            if (peer == nullptr)
+                std::cout << "NO AVAILABLE PEERS FOR INITIATING CONNECTION.\n";
+            else
+                std::cout << "ATTEMPTING TO CONNECT TO SERVER...\n"; 
         }
 
         //Host button

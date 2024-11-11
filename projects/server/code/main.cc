@@ -24,6 +24,16 @@ void processClientPacket(const PacketWrapper* packetWrapper)
 	//Process each type of incoming message
 	switch(packetWrapper->packet_type())
 	{
+		case PacketType_ClientConnectS2C: 
+			{
+				auto connectPacket = packetWrapper->packet_as_ClientConnectS2C();
+				uint32 uuid = connectPacket->uuid();  
+				uint32 time = connectPacket->time();
+				std::cout << "Client connected with UUID: " << uuid << ", at time: " << time << std::endl;
+				// You could add this client to a list of connected clients, or process further connection setup here.
+				break;
+			}
+
 		case PacketType_InputC2S:
 			{
 				auto inputPacket = packetWrapper->packet_as_InputC2S();
