@@ -21,8 +21,8 @@
 #include <chrono>
 #include "spaceship.h"
 
-//#include <enet/enet.h>
 #include "proto.h"
+
 
 using namespace Display;
 using namespace Render;
@@ -54,10 +54,11 @@ SpaceGameApp::Open()
 {
 	App::Open();
 	this->window = new Display::Window;
-    this->window->SetSize(2500, 2000);
+    this->window->SetSize(400, 400);
 
     if (this->window->Open())
 	{
+        Net::Initialize();
 		// set clear color to gray
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         RenderDevice::Init();
@@ -212,45 +213,45 @@ SpaceGameApp::Run()
     // game loop
     while (this->window->IsOpen())
 	{
+        client.Poll();
+        clientHost.Poll();
+            //ENetEvent event;
+            //enet_host_service(client, &event, 0);
+            //    switch (event.type) {
+            //        case ENET_EVENT_TYPE_CONNECT:
+            //        {
+            //            isConnected = true;
+            //            std::cout << "Successfully connected to server on port: "
+            //                << peer->address.port << std::endl;
+            //            //Send a connection package to the server flatbuffer
+                        //flatbuffers::FlatBufferBuilder builder; 
+                        //auto clientConnectpacket = Protocol::CreateClientConnectS2C(builder, /* uuid */ 1, /* time */ static_cast<uint64_t>(time(nullptr) * 1000));
+                        //auto packetWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType_ClientConnectS2C, clientConnectpacket.Union());
+                        //builder.Finish(packetWrapper);
 
-        if (client && !isConnected) {
-            ENetEvent event;
-            if (enet_host_service(client, &event, 1000) > 0) {
-                switch (event.type) {
-                    case ENET_EVENT_TYPE_CONNECT:
-                    {
-                        isConnected = true;
-                        std::cout << "Successfully connected to server on port: "
-                            << peer->address.port << std::endl;
-                        //Send a connection package to the server flatbuffer
-                        flatbuffers::FlatBufferBuilder builder; 
-                        auto clientConnectpacket = Protocol::CreateClientConnectS2C(builder, /* uuid */ 1, /* time */ static_cast<uint64_t>(time(nullptr) * 1000));
-                        auto packetWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType_ClientConnectS2C, clientConnectpacket.Union());
-                        builder.Finish(packetWrapper);
+                        ////send the clientConnectpackage to the server
+                        //ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
+                        //enet_peer_send(peer, 0, packet);
+                        //enet_host_flush(client);
+            //            break;
+            //        }
+            //    
+            //    case ENET_EVENT_TYPE_RECEIVE:
+            //        // Process the incoming packet from the server
+            //        std::cout << "Received packet from server.\n";
+            //        //enet_packet_destroy(event.packet);
+            //        break;
 
-                        //send the clientConnectpackage to the server
-                        ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
-                        enet_peer_send(peer, 0, packet);
-                        enet_host_flush(client);
-                        break;
-                    }
-                
-                case ENET_EVENT_TYPE_RECEIVE:
-                    // Process the incoming packet from the server
-                    std::cout << "Received packet from server.\n";
-                    enet_packet_destroy(event.packet);
-                    break;
+            //    case ENET_EVENT_TYPE_DISCONNECT:
+            //        std::cout << "Disconnected from server." << std::endl;
+            //        isConnected = false;
+            //        break;
 
-                case ENET_EVENT_TYPE_DISCONNECT:
-                    std::cout << "Disconnected from server." << std::endl;
-                    isConnected = false;
-                    break;
-
-                default:
-                    break;
-                }
-            }
-        }
+            //    default:
+            //        break;
+            //    }
+            
+        
 
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -307,17 +308,6 @@ SpaceGameApp::Run()
 void
 SpaceGameApp::Exit()
 {
-    if(client)
-    {
-        enet_peer_reset(peer);
-        enet_host_destroy(client);
-        enet_deinitialize();
-    }
-    if (server)
-        delete server;
-
-    delete client, peer;
-    client = nullptr, peer = nullptr, server = nullptr;
     this->window->Close();
 }
 
@@ -346,80 +336,42 @@ SpaceGameApp::RenderUI()
         Debug::DispatchDebugTextDrawing();
 #endif // !DEBUG
 
-
+        static char text[10000];
         ImGui::Begin("Network Control");
         ImGui::InputText("Server IP", ipAddress, sizeof(ipAddress));
 
-        if (ImGui::Button("Connect") && client == nullptr)
+        if (ImGui::Button("Connect"))
         {
-            //Initialize ENET if not already done
-            if (enet_initialize() != 0)
-            {
-                std::cerr << "CLIENT: FAILED TO INITALIZE CLIENT ENET\n";
-                return;
-            }
-            
-            client = enet_host_create(nullptr, 1, 2, 0, 0); // Create client host for one connection
-            
-            if (client == nullptr) { std::cerr << "CLIENT: FAILED TO CREATE CLIENT\n";  return; }
-            
-            //Connected to the server with the entered IP ADDRESS
-            ENetAddress address;
-            enet_address_set_host_ip(&address, ipAddress); //IP FROM IMGUI TEXT
-            address.port = 1234; // server port
-            peer = enet_host_connect(client, &address, 2, 0); //ATTEMPT TO CONNECT
-            if (peer == nullptr)
-                std::cout << "NO AVAILABLE PEERS FOR INITIATING CONNECTION.\n";
+            client.Create();
+
+            if (client.Connect(ipAddress, 6969))
+                std::cout << "CLIENT: CONNECTED TO SERVER\n";
             else
-                std::cout << "ATTEMPTING TO CONNECT TO SERVER...\n"; 
+                std::cout << "CLIENT: FAILED TO CONNECT SERVER\n";
         }
 
+        ImGui::InputText(" ", text, 10000);
+        if (ImGui::Button("SEND"))
+            client.SendPacket(text, 10000);
         //Host button
         if(ImGui::Button("Host"))
         {
-            //CREATE THE SERVER HOST
-            if(!server)
-            {
-                ENetAddress address;
-                address.host = ENET_HOST_ANY;
-                address.port = 1234;
-                server = enet_host_create(&address, 32, 2, 0, 0);
-                if(!server)
-                    std::cout << "ERROR: FAILED TO CREATE SERVER\n";
-                else
-                    std::cout << "SERVER RUNNING, LISTENING ON PORT: "  << address.port << "\n";
-            }
-
-            // Initialize client to connect to the hosted server
-            if (!client)
-            {
-                client = enet_host_create(nullptr, 1, 2, 0, 0);
-            }
-            if (client)
-            {
-                ENetAddress address;
-                enet_address_set_host(&address, "127.0.0.1");  // Connect to localhost
-                address.port = 1234;
-
-                peer = enet_host_connect(client, &address, 2, 0);
-                if (peer)
-                {
-                    std::cout << "Client connected to hosted server.\n";
-                }
-            }
+            clientHost.Create(6969);
+            client.Create();
+            client.Connect(ipAddress, 6969);
         }
 
-        // Display connection status
-        if (peer && peer->state == ENET_PEER_STATE_CONNECTED)
-        {
-            ImGui::Text("Status: Connected");
-            isConnected = true;
-        }
-        else
-        {
-            ImGui::Text("Status: Disconnected");
-            isConnected = false;
-        }
+        //// Display connection status
+        //if (peer && peer->state == ENET_PEER_STATE_CONNECTED)
+        //{
+        //    ImGui::Text("Status: Connected");
+        //    isConnected = true;
+        //}
+        //else
+        //{
+        //    ImGui::Text("Status: Disconnected");
+        //    isConnected = false;
+        //}
 
         ImGui::End();
 	}

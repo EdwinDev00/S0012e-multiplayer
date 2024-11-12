@@ -1,4 +1,4 @@
-#pragma once
+	#pragma once
 //------------------------------------------------------------------------------
 /**
 	Space game application
@@ -9,7 +9,7 @@
 #include "core/app.h"
 #include "render/window.h"
 
-#include <enet/enet.h>
+#include "network/network.h"
 
 namespace Game
 {
@@ -35,8 +35,8 @@ private:
 	Display::Window* window;
 	char ipAddress[16] = "127.0.0.1";  // Default IP for localhost
 	bool isConnected = false;          // Track connection status
-	ENetHost* client = nullptr;         // Client connection host
-	ENetPeer* peer = nullptr;           // Client's peer connection
-	ENetHost* server = nullptr;         // Server host when hosting
+
+	Net::Client client;
+	Net::Server clientHost;
 };
 } // namespace Game

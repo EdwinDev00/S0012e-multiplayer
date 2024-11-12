@@ -13,10 +13,13 @@
 #include "glm.hpp"
 #include <chrono>
 
+#include "network/network.h"
+
 //SERVER SIDE
 using namespace Protocol;
 std::vector<Player> playersV;
 std::vector<Laser> lasersV;
+Net::Server server;
 
 
 void processClientPacket(const PacketWrapper* packetWrapper)
@@ -110,73 +113,62 @@ The server has a somewhat similar loop:
 	5.Go back to Step 3.
 */
 //----------------------------------------------------------------------------------
+	Net::Initialize();
 
-
-	if(enet_initialize() != 0)
-	{
-		std::cerr << "SERVER: FAILED TO INITALIZING ENET\n";
-		return EXIT_FAILURE;
-	}
-	
-	//Create sever UDP Connection
-	ENetAddress address;
-	address.host = ENET_HOST_ANY; //bind to any host
-	address.port = 1234; // server port
-
-	ENetHost* server = enet_host_create(&address, 32, 2, 0, 0); //max 32 client 2 channels
-	if(server == nullptr)
-	{
-		std::cerr << "SERVER: AN ERROR OCCURED WHILE TYRING TO CREATE SERVER HOST\n";
-		enet_deinitialize();
-		return EXIT_FAILURE;
-	}
-
-	std::cout << "SERVER: STARTED AND LISTENING TO PORT " << address.port << "\n";
+	server.Create(1234);
 
 	//MAIN SERVER LOOP
 	while(true)
 	{
-		ENetEvent event;
-		while(enet_host_service(server,&event, 1000) > 0)
-		{
-			switch (event.type)
-			{
-				case ENET_EVENT_TYPE_CONNECT:
-					std::cout << "A client connected from "
-						<< (event.peer->address.host & 0xff) << "."
-						<< ((event.peer->address.host >> 8) & 0xff) << "."
-						<< ((event.peer->address.host >> 16) & 0xff) << "."
-						<< ((event.peer->address.host >> 24) & 0xff)
-						<< ":" << event.peer->address.port << std::endl;
-					break;
+		server.Poll();
 
-				case ENET_EVENT_TYPE_RECEIVE: 
-				{
+	//	ENetEvent event;
+	//	if (enet_host_service(server, &event, 0) > 0) {
+
+	//	
+	//		switch (event.type)
+	//		{
+	//			for (int i = 0; i < 2; i++)
+	//				std::cout << server->peers[i].address.host << std::endl;
+	//			case ENET_EVENT_TYPE_CONNECT:
+	//				std::cout << "A client connected from "
+	//					<< (event.peer->address.host & 0xff) << "."
+	//					<< ((event.peer->address.host >> 8) & 0xff) << "."
+	//					<< ((event.peer->address.host >> 16) & 0xff) << "."
+	//					<< ((event.peer->address.host >> 24) & 0xff)
+	//					<< ":" << event.peer->address.port << std::endl;
+	//				break;
+
+	//			case ENET_EVENT_TYPE_RECEIVE: 
+	//			{
 					// Deserialize the incoming packet with FlatBuffers
-					const PacketWrapper* packetWrapper = GetPacketWrapper(event.packet->data);
-					processClientPacket(packetWrapper);
+					/*const PacketWrapper* packetWrapper = GetPacketWrapper(event.packet->data);
+					processClientPacket(packetWrapper);*/
 
-					// Optionally, send a game state update back to the client
-					sendGameState(server, event.peer);
+	//				// Optionally, send a game state update back to the client
+	//				sendGameState(server, event.peer);
 
-					enet_packet_destroy(event.packet);
-					break;
-				}
+	//				enet_packet_destroy(event.packet);
+	//				break;
+	//			}
 
-				case ENET_EVENT_TYPE_DISCONNECT:
-					std::cout << "Client disconnected." << std::endl;
-					event.peer->data = nullptr;
-					break;
+	//			case ENET_EVENT_TYPE_DISCONNECT:
+	//				std::cout << "Client disconnected." << std::endl;
 
-				default:
-					break;
-			}
-		}		
+	//				//event.peer->data = nullptr;
+	//				break;
+
+	//			default:
+	//				std::cout << "DEFAULT" << std::endl;
+	//				break;
+	//		}
+	//			
+	//	}
 	}
 
-	enet_host_destroy(server);
-	enet_deinitialize();
-	return EXIT_SUCCESS;
+	//enet_host_destroy(server);
+	//enet_deinitialize();
+	//return EXIT_SUCCESS;
 
 
 	/*Game::SpaceGameApp app;
