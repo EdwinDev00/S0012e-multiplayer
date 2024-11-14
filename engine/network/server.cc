@@ -21,6 +21,17 @@ namespace Net {
         return true;
     }
 
+    void Server::AddPeerUser(ENetPeer* user)
+    {
+        peers.push_back(user);
+    }
+
+    void Server::BroadcastGameState()
+    {
+        // Sends all spaceships' states to all clients
+
+    }
+
     Server::~Server() {
         LOG("Destroyed server.\n");
         enet_host_destroy(m_Server);
@@ -43,13 +54,22 @@ namespace Net {
                 case ENET_EVENT_TYPE_CONNECT:
                     LOG("Server: connection formed with \"" <<
                         IP_STREAM(m_Event.peer->address.host) << ':' << m_Event.peer->address.port << "\"\n");
+                        //PEERS CONNECTED TO SERVER CREATE A THAT CLIENT AND STORE IT IN A LIST OF CONNECTED CLIENTS
+                    peers.push_back(m_Event.peer);
                     break;
+
                 case ENET_EVENT_TYPE_RECEIVE:
                     LOG("Server: recieved packet of size " <<
                         m_Event.packet->dataLength << " \"" << m_Event.packet->data << "\"\n");
-
-                    m_Event.packet->data;
-                    enet_packet_destroy(m_Event.packet);
+                    {
+                        const PacketWrapper* packetWrapper = GetPacketWrapper(m_Event.packet->data);
+                        processPacket(packetWrapper);
+                        //UPDATE THE GAME STATE (BASED ON THE PACKET CONETEN)
+                        
+                    }
+                	enet_packet_destroy(m_Event.packet);
+                   /* m_Event.packet->data;
+                    enet_packet_destroy(m_Event.packet);*/
                     break;
                 case ENET_EVENT_TYPE_DISCONNECT:
                     LOG("Server: disconnected \"" << m_Event.peer->data << "\"\n");

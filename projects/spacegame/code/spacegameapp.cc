@@ -21,7 +21,7 @@
 #include <chrono>
 #include "spaceship.h"
 
-#include "proto.h"
+//#include "proto.h"
 
 
 using namespace Display;
@@ -202,13 +202,10 @@ SpaceGameApp::Run()
     */
     SpaceShip ship;
 
-    SpaceShip ship2;
-    //ship2.model = LoadModel("assets/space/spaceship.glb");
-
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
-    std::vector<int> markForDelete;
+    //std::vector<int> markForDelete;
 
     // game loop
     while (this->window->IsOpen())
@@ -283,10 +280,7 @@ SpaceGameApp::Run()
         }
 
         ship.CheckCollisions();
-        ship2.CheckCollisions();
-
         RenderDevice::Draw(ship.model, ship.transform);
-        RenderDevice::Draw(ship2.model, ship2.transform);
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);
@@ -344,7 +338,7 @@ SpaceGameApp::RenderUI()
         {
             client.Create();
 
-            if (client.Connect(ipAddress, 6969))
+            if (client.Connect(ipAddress, 1234))
                 std::cout << "CLIENT: CONNECTED TO SERVER\n";
             else
                 std::cout << "CLIENT: FAILED TO CONNECT SERVER\n";
@@ -356,9 +350,9 @@ SpaceGameApp::RenderUI()
         //Host button
         if(ImGui::Button("Host"))
         {
-            clientHost.Create(6969);
+            clientHost.Create(1234);
             client.Create();
-            client.Connect(ipAddress, 6969);
+            client.Connect(ipAddress, 1234);
         }
 
         //// Display connection status

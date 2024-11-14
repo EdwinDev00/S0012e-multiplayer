@@ -9,6 +9,7 @@ SET(files_network
 	client.cc
 	server.cc
 	server.h
+	proto.h
 	)
 SOURCE_GROUP("network" FILES ${files_network})
 

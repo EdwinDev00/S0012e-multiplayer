@@ -7,7 +7,7 @@
 
 //TODO: TEST CLIENT CONNECT TO THE SERVER BASED ON PORT AND ADDRESS
 
-#include "proto.h"
+//#include "proto.h"
 #include "enet/enet.h"
 #include <iostream>
 #include "glm.hpp"
@@ -16,73 +16,73 @@
 #include "network/network.h"
 
 //SERVER SIDE
-using namespace Protocol;
+//using namespace Protocol;
 std::vector<Player> playersV;
 std::vector<Laser> lasersV;
 Net::Server server;
 
 
-void processClientPacket(const PacketWrapper* packetWrapper)
-{
-	//Process each type of incoming message
-	switch(packetWrapper->packet_type())
-	{
-		case PacketType_ClientConnectS2C: 
-			{
-				auto connectPacket = packetWrapper->packet_as_ClientConnectS2C();
-				uint32 uuid = connectPacket->uuid();  
-				uint32 time = connectPacket->time();
-				std::cout << "Client connected with UUID: " << uuid << ", at time: " << time << std::endl;
-				// You could add this client to a list of connected clients, or process further connection setup here.
-				break;
-			}
+//void processClientPacket(const PacketWrapper* packetWrapper)
+//{
+//	//Process each type of incoming message
+//	switch(packetWrapper->packet_type())
+//	{
+//		case PacketType_ClientConnectS2C: 
+//			{
+//				auto connectPacket = packetWrapper->packet_as_ClientConnectS2C();
+//				uint32 uuid = connectPacket->uuid();  
+//				uint32 time = connectPacket->time();
+//				std::cout << "Client connected with UUID: " << uuid << ", at time: " << time << std::endl;
+//				// You could add this client to a list of connected clients, or process further connection setup here.
+//				break;
+//			}
+//
+//		case PacketType_InputC2S:
+//			{
+//				auto inputPacket = packetWrapper->packet_as_InputC2S();
+//				uint32 time = inputPacket->time();
+//				uint32 bitmap = inputPacket->bitmap();
+//				std::cout << "Received InputC2S: time = " << time << ", bitmap = " << bitmap << std::endl;
+//				// Use the time and bitmap to drive player actions on the server
+//
+//				break;
+//			}
+//		
+//		case PacketType_TextC2S:
+//			{
+//				auto textPacket = packetWrapper->packet_as_TextC2S();
+//				std::cout << "Received TextC2S: text = " << textPacket->text()->str() << std::endl;
+//				// Process text message (e.g., chat)
+//				break;
+//			}
+//		
+//		default:
+//			std::cerr << "Unknown packet type received" << std::endl;
+//			break;
+//	}
+//}
 
-		case PacketType_InputC2S:
-			{
-				auto inputPacket = packetWrapper->packet_as_InputC2S();
-				uint32 time = inputPacket->time();
-				uint32 bitmap = inputPacket->bitmap();
-				std::cout << "Received InputC2S: time = " << time << ", bitmap = " << bitmap << std::endl;
-				// Use the time and bitmap to drive player actions on the server
-
-				break;
-			}
-		
-		case PacketType_TextC2S:
-			{
-				auto textPacket = packetWrapper->packet_as_TextC2S();
-				std::cout << "Received TextC2S: text = " << textPacket->text()->str() << std::endl;
-				// Process text message (e.g., chat)
-				break;
-			}
-		
-		default:
-			std::cerr << "Unknown packet type received" << std::endl;
-			break;
-	}
-}
-
-void sendGameState(ENetHost* server, ENetPeer* clientPeer)
-{
-	flatbuffers::FlatBufferBuilder builder;
-
-	//Demonstration empty game state
-	std::vector<flatbuffers::Offset<Player*>> players; // Add players if necessary
-	std::vector<flatbuffers::Offset<Laser*>> lasers;   // Add lasers if necessary
-
-	auto playersVector = builder.CreateVector(players);
-	auto laserVector = builder.CreateVector(lasers);
-	auto gamestate = CreateGameStateS2C(builder,playersVector.o,laserVector.o);
-	auto packetWrapper = CreatePacketWrapper(builder, PacketType_GameStateS2C, gamestate.Union());
-	builder.Finish(packetWrapper);
-
-	//Send the packet to the client
-	ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
-	enet_peer_send(clientPeer, 0, packet);
-	enet_host_flush(server);
-
-	std::cout << "Sent GameStateS2C to client." << std::endl;
-}
+//void sendGameState(ENetHost* server, ENetPeer* clientPeer)
+//{
+//	flatbuffers::FlatBufferBuilder builder;
+//
+//	//Demonstration empty game state
+//	std::vector<flatbuffers::Offset<Player*>> players; // Add players if necessary
+//	std::vector<flatbuffers::Offset<Laser*>> lasers;   // Add lasers if necessary
+//
+//	auto playersVector = builder.CreateVector(players);
+//	auto laserVector = builder.CreateVector(lasers);
+//	auto gamestate = CreateGameStateS2C(builder,playersVector.o,laserVector.o);
+//	auto packetWrapper = CreatePacketWrapper(builder, PacketType_GameStateS2C, gamestate.Union());
+//	builder.Finish(packetWrapper);
+//
+//	//Send the packet to the client
+//	ENetPacket* packet = enet_packet_create(builder.GetBufferPointer(), builder.GetSize(), ENET_PACKET_FLAG_RELIABLE);
+//	enet_peer_send(clientPeer, 0, packet);
+//	enet_host_flush(server);
+//
+//	std::cout << "Sent GameStateS2C to client." << std::endl;
+//}
 
 int
 main(int argc, const char** argv)

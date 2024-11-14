@@ -69,6 +69,15 @@ namespace Net {
             case ENET_EVENT_TYPE_CONNECT:
                 LOG("Client: connection formed with \"" <<
                     IP_STREAM(m_Event.peer->address.host) << ':' << m_Event.peer->address.port << "\"\n");
+                {
+                      //Send a connection package to the server flatbuffer
+                      flatbuffers::FlatBufferBuilder builder; 
+                      auto clientConnectpacket = Protocol::CreateClientConnectS2C(builder, /* uuid */ 1, /* time */ static_cast<uint64_t>(time(nullptr) * 1000));
+                      auto packetWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType_ClientConnectS2C, clientConnectpacket.Union());
+                      builder.Finish(packetWrapper);
+                      SendPacket(builder.GetBufferPointer(), builder.GetSize());    
+                      LOG("CLIENT: Send Connection Packet Request \n");
+                }
                 break;
             case ENET_EVENT_TYPE_RECEIVE:
                 LOG("Client: recieved packet of size " <<
