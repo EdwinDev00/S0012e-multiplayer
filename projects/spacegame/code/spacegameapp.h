@@ -9,6 +9,11 @@
 #include "core/app.h"
 #include "render/window.h"
 
+#include <vector>
+#include "physics/physics.h"
+#include "render/model.h"
+
+
 #include "network/network.h"
 
 namespace Game
@@ -32,11 +37,20 @@ private:
 	/// show some ui things
 	void RenderUI();
 
+	void SetupScene();
+	void InitAsteroid();
+	void InitSkyLight();
+
+	//list of objects
+	std::vector<std::tuple<Render::ModelId, Physics::ColliderId, glm::mat4>> asteroids;
+
 	Display::Window* window;
 	char ipAddress[16] = "127.0.0.1";  // Default IP for localhost
 	bool isConnected = false;          // Track connection status
 
 	Net::Client client;
 	Net::Server clientHost;
+
+
 };
 } // namespace Game

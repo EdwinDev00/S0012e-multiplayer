@@ -2,6 +2,7 @@
 #include "client.h"
 
 #include "network.h"
+#include "../projects/spacegame/code/spaceship.h"
 
 namespace Net {
     Client::~Client() {
@@ -26,7 +27,7 @@ namespace Net {
     }
 
     bool
-    Client::Connect(const char *ip, const uint16 port) {
+        Client::Connect(const char* ip, const uint16 port) {
         enet_address_set_host(&m_Address, ip);
         m_Address.port = port;
         LOG("Connecting to " << IP_STREAM(m_Address.host) << ':' << port << '\n');
@@ -52,8 +53,8 @@ namespace Net {
         }
     }
 
-    void Client::SendPacket(void *data, size_t size) {
-        ENetPacket *packet = enet_packet_create(data, size, ENET_PACKET_FLAG_RELIABLE);
+    void Client::SendPacket(void* data, size_t size) {
+        ENetPacket* packet = enet_packet_create(data, size, ENET_PACKET_FLAG_RELIABLE);
         enet_peer_send(m_Peer, 0, packet);
         //enet_host_flush(m_Client);
     }
@@ -66,27 +67,51 @@ namespace Net {
         enet_host_service(m_Client, &m_Event, 0);
 
         switch (m_Event.type) {
-            case ENET_EVENT_TYPE_CONNECT:
-                LOG("Client: connection formed with \"" <<
-                    IP_STREAM(m_Event.peer->address.host) << ':' << m_Event.peer->address.port << "\"\n");
-                {
-                      //Send a connection package to the server flatbuffer
-                      flatbuffers::FlatBufferBuilder builder; 
-                      auto clientConnectpacket = Protocol::CreateClientConnectS2C(builder, /* uuid */ 1, /* time */ static_cast<uint64_t>(time(nullptr) * 1000));
-                      auto packetWrapper = Protocol::CreatePacketWrapper(builder, Protocol::PacketType_ClientConnectS2C, clientConnectpacket.Union());
-                      builder.Finish(packetWrapper);
-                      SendPacket(builder.GetBufferPointer(), builder.GetSize());    
-                      LOG("CLIENT: Send Connection Packet Request \n");
+        case ENET_EVENT_TYPE_CONNECT:
+            LOG("Client: connection formed with \"" <<
+                IP_STREAM(m_Event.peer->address.host) << ':' << m_Event.peer->address.port << "\"\n");
+            break;
+        case ENET_EVENT_TYPE_RECEIVE:
+            LOG("Client: recieved packet of size " <<
+                m_Event.packet->dataLength << " \"" << m_Event.packet->data << "\"\n");
+            {
+                const PacketWrapper* packet = GetPacketWrapper(m_Event.packet->data);
+                switch (packet->packet_type()) {
+                    case Protocol::PacketType_SpawnPlayerS2C: {
+                        //DESERIALIZE THE PACKET AND SET THE VALUES ACCORDINGLY
+                        auto spawnPlayer = packet->packet_as_SpawnPlayerS2C();
+                        LOG("Client: RECIEVED SPAWN PACKET OF: " << spawnPlayer->player()->uuid());
+                        auto player = spawnPlayer->player();
+                        LOG("Client: DESERIALIZE SPAWN PACKET: " << spawnPlayer->UnPack()->player->uuid());
+                        //USE THE DATA FOR RENDERING the player out
+                        glm::vec3 pos = { player->position().x(),player->position().y(),player->position().z() };
+                        glm::quat orientation = glm::identity<glm::quat>();
+                        glm::mat4 T = translate(pos) * (glm::mat4) orientation;
+                        //shipTransforms->insert({player->uuid(), T});
+                        // 
+                       //TESTING storing whole spaceship object
+                        Game::SpaceShip* newplayer = new Game::SpaceShip();
+                        newplayer->id = player->uuid();
+                        newplayer->transform = T;
+                        ships->insert({ player->uuid(),newplayer });
+
+
+                        break;
+                    }
+                    case Protocol::PacketType_DespawnPlayerS2C: {
+                        auto despawnPlayer = packet->packet_as_DespawnPlayerS2C();
+                        uint32_t uuid = despawnPlayer->uuid();
+                        //players.erase(uuid);
+                        LOG("Client: Player despawned: " << uuid);
+                        break;
+                    }
                 }
+            }
                 break;
-            case ENET_EVENT_TYPE_RECEIVE:
-                LOG("Client: recieved packet of size " <<
-                    m_Event.packet->dataLength << " \"" << m_Event.packet->data << "\"\n");
-                break;
-            case ENET_EVENT_TYPE_DISCONNECT:
-                LOG("Client: disconnected \"" << m_Event.peer->data << "\"\n");
-                break;
-            default: ;
-        }
+        case ENET_EVENT_TYPE_DISCONNECT:
+            LOG("Client: disconnected \"" << m_Event.peer->data << "\"\n");
+            break;
+        default:;
+            }
     }
 }

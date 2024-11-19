@@ -3,7 +3,7 @@
 // (C) 2015-2018 Individual contributors, see AUTHORS file
 //------------------------------------------------------------------------------
 #include "config.h"
-#include "spacegameapp.h"
+//#include "spacegameapp.h"
 
 //TODO: TEST CLIENT CONNECT TO THE SERVER BASED ON PORT AND ADDRESS
 

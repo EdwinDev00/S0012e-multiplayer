@@ -7,6 +7,16 @@
 #define LOG(msg)std::cout << msg
 using namespace Protocol;
 
+struct PlayerState
+{
+	uint32_t uuid;
+	glm::vec3 position;
+	glm::vec3 velocity;
+	glm::quat direction;
+};
+
+//std::unordered_map<uint32_t, Player> players; // Store players by UUID //Should be in the server side not in here
+
 namespace Net {
 #define IP_STREAM(IP) (IP & 0xFF) << '.' << ((IP >> 8) & 0xFF) << '.' << ((IP >> 16) & 0xFF) << '.' << ((IP >> 24) & 0xFF)
 
@@ -23,8 +33,6 @@ namespace Net {
 			uint32 uuid = connectPacket->uuid();
 			uint32 time = connectPacket->time();
 			std::cout << "Client connected with UUID: " << uuid << ", at time: " << time << std::endl;
-			// You could add this client to a list of connected clients, or process further connection setup here.
-			//SUCCESSFUL CONNECT TO THE SERVER PROCEED CREATING THE USER 
 
 			break;
 		}

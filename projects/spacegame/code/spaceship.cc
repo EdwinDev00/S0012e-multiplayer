@@ -19,6 +19,10 @@ namespace Game
 
 SpaceShip::SpaceShip()
 {
+    static uint32_t count = 0;
+    id = count;
+    count++;
+
     // Load the spaceship model and create a collider
     model = LoadModel("assets/space/spaceship.glb");
     colliderMesh = Physics::LoadColliderMesh("assets/space/spaceship_physics.glb");

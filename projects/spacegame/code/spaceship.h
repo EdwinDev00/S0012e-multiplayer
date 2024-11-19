@@ -82,6 +82,9 @@ struct SpaceShip
 {
     SpaceShip();
     
+    //uuid id for the current client id
+    uint32_t id;
+
     glm::vec3 position = glm::vec3(0);
     glm::quat orientation = glm::identity<glm::quat>();
     glm::vec3 camPos = glm::vec3(0, 1.0f, -2.0f);
