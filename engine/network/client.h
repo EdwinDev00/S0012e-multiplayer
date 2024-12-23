@@ -24,6 +24,8 @@ namespace Net {
 
         void Poll();
 
+        const bool isActive() { return m_Active; }
+
         //void setShipTranforms(std::unordered_map<uint32_t, glm::mat4>* transforms)
         //{
         //    this->shipTransforms = transforms;
@@ -34,11 +36,14 @@ namespace Net {
             this->ships = ships;
         }
 
+        uint32_t clientControlledID; //TESTING
+
     private:
         ENetHost *m_Client = nullptr;
         ENetPeer *m_Peer = nullptr;
         ENetAddress m_Address = {};
         ENetEvent m_Event = {};
+
 
         //BETTER PERFORMANCE 
         //std::unordered_map<uint32_t, glm::mat4>* shipTransforms;

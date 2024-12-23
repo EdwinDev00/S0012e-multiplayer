@@ -24,6 +24,9 @@
 //#include "proto.h"
 
 
+//CLIENT AND HOSTING CLIENT APPLICATION
+//APPLY GAME SYNCRONIZATION BETWEEN GAME STATE AND THE SERVER LOGIC
+
 using namespace Display;
 using namespace Render;
 
@@ -187,21 +190,8 @@ SpaceGameApp::Run()
     InitAsteroid();
     InitSkyLight();
     
-
-    //TODO is Despawn player when quitting
-    //implement the connects2c then make spawnplayer request
-    // make sure the despawn player works
-    // Gamestate update implement it
-    // key action packet handler
-
-    //Refactor code Sending packet calls communication
-    //Network contains processing packet data
-    //client and server only withdraw the packet data struct
-
     Render::ModelId shipid = LoadModel("assets/space/spaceship.glb");
-    SpaceShip currentplayership;
-    currentplayership.id = 1;
-    //test this with spaceships*
+
     std::unordered_map<uint32_t, glm::mat4> shiptransforms;
     std::unordered_map<uint32_t, Game::SpaceShip*> ships;
 
@@ -210,11 +200,37 @@ SpaceGameApp::Run()
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
+
+    /*
+    TASK LIST GUIDELINE:
+        - ESTABLISH CONNECTION FOR CLIENT HOST ARCHITECTURE (COMPLETE)
+            - CONNECTS TO SERVER  (DONE)
+            - OTHER CLIENT ABLE TO CONNECT TO SAME SERVER (DONE)
+
+        CURRENT PROBLEM: CLIENT CANNOT RECIEVE SEVERAL PACKAGE AT ONCE (NOT RECIEVING CONNECTS2C PACKAGE FOR PROCESS)
+
+        - HANDLE CREATING PLAYER AVATAR IN THE GAME (CURRENT WORKING TASK)
+            - SUCCESSFUL CONNECTION REQUEST CREATE THE PLAYER STRUCT FOR STORING DATA ABOUT THE CONNECTED USER
+            - SERVER SUCCESSFUL CREATED USER NOTIFY ALL THE OTHER PLAYER TO PERFORM SPAWN REQUEST FOR SPAWNING THE NEW PLAYER (STILL NEED SOME WORK)
+                - WHEN A NEW PLAYER JOINS IS NOT CONTROLLING THE INITAL SPACESHIP (IMPORTANT)
+            - THE NEWLY ADDED PLAYER GET THE LIST OF THE CURRENT PLAYER CONNECTED LIST (WORKING ON)
+            - PLAYER RENDERER OUT ALL THE CONNECTED CLIENT AVATARS IN THE LIST
+            - HANDLE DISCONNECTED USER (UPDATE GAME STATE AND REMOVE THAT USER FROM ALL THE CONNECTED USER)
+    */
+
+
     // game loop
     while (this->window->IsOpen())
 	{
         client.Poll();
         clientHost.Poll();
+
+        //INPUT LISTENING (only if the client is connected)
+        if(client.isActive())
+        {
+            if (kbd->pressed[Input::Key::W])
+                std::cout << "CLIENT CALLING IN THE LOOP SENDING INPUT PACKET\n";
+        }
           
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -236,8 +252,6 @@ SpaceGameApp::Run()
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
 
-        currentplayership.Update(dt);
-
         for (auto& proj : projInWorld)
         {
             proj.Update(dt);
@@ -245,21 +259,15 @@ SpaceGameApp::Run()
             //NEED TO FIND A SOLUTION OF CHECKING SHIPS COLLISION FIRST AFTERWARDS ASTEROIDS/other collision //server handling
         }
 
-        //ship.CheckCollisions();
         for ( auto& [uuid,ship] : ships) //drawout the players spaceship
-        {
-            if (uuid == currentplayership.id)
-            {
-                //Particle still spawn need to look at
-                std::cout << "SAME ID SKIP SKIP RENDERING THIS ONE\n";
-                continue;
-            }
-            //if uuid = currentplayership skip the rendering because it always render out self
-            RenderDevice::Draw(shipid, ship->transform);
+        {            
+            //IT SHOULD AWAIT FOR GAMESTATAE UPDATE HERE
+            RenderDevice::Draw(shipid, ships[uuid]->transform);
+           //ships[uuid]->Update(dt);
+           // 
+        //THIS UPDATE LOOP SHOULD BE INSIDE GAMESTATE UPDATE
+           ships[client.clientControlledID]->Update(dt); //TESTING CURRENTLY
         }
-        
-        RenderDevice::Draw(shipid, currentplayership.transform);
-       
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);

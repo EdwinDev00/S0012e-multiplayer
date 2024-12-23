@@ -3,6 +3,7 @@
 #include "client.h"
 #include <iostream>
 #include "proto.h"
+#include "message.h" //NETWORK MESSAGING PAKET 
 
 #define LOG(msg)std::cout << msg
 using namespace Protocol;

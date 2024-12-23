@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include "proto.h"
 
+
 namespace Net {
     class Server {
     public:
@@ -15,7 +16,7 @@ namespace Net {
 
         void Poll();
 
-        std::vector<std::pair<ENetPeer*, Protocol::Player>> users;
+        std::vector<std::pair<ENetPeer*, Protocol::Player>> users; //CONNECTED USERS
 
     private:
         ENetHost *m_Server = nullptr;
@@ -25,8 +26,13 @@ namespace Net {
 
         bool m_Active = false;
 
-        void AddPeerUser(ENetPeer* user); // Adds the connected peer into the list
+
+        uint64_t GetServerTime();
+        void AddPeerUser(ENetPeer* peer); // Adds the connected peer into the list
+        void RemovePeerUser(ENetPeer* peer); // Adds the connected peer into the list
         void BroadcastGameState();
-        void BroadcastPacket(void* data, size_t size);
+
+        void HandlePacket(ENetPeer* peer, ENetPacket* packet);
+        void UpdatePlayerPhysics(ENetPeer* peer, const Protocol::InputC2S* input);
     };
 }

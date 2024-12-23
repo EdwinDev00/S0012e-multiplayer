@@ -10,6 +10,7 @@ SET(files_network
 	server.cc
 	server.h
 	proto.h
+	message.h
 	)
 SOURCE_GROUP("network" FILES ${files_network})
 
