@@ -15,9 +15,9 @@ class SpaceGameApp : public Core::App
 {
 public:
 	/// constructor
-	SpaceGameApp();
+	SpaceGameApp() {};
 	/// destructor
-	~SpaceGameApp();
+	~SpaceGameApp(){};
 
 	/// open app
 	bool Open();
@@ -30,6 +30,28 @@ private:
 	/// show some ui things
 	void RenderUI();
 
+<<<<<<< Updated upstream
 	Display::Window* window;
+=======
+	void SetupScene();
+	void InitAsteroid();
+	void InitSkyLight();
+
+	//list of objects
+	std::vector<std::tuple<Render::ModelId, Physics::ColliderId, glm::mat4>> asteroids;
+	
+
+	Display::Window* window;
+	char ipAddress[16] = "127.0.0.1";  // Default IP for localhost
+	bool isConnected = false;          // Track connection status
+	bool isHost = false;
+	//Net::Client client;
+	//Net::Server clientHost;
+	//Client2 client2;
+
+	//testing the ENet connection
+
+
+>>>>>>> Stashed changes
 };
 } // namespace Game

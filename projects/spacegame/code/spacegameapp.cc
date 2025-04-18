@@ -21,11 +21,20 @@
 #include <chrono>
 #include "spaceship.h"
 
+<<<<<<< Updated upstream
+=======
+#include "../engine/network/server.h"
+#include "../engine/network/client.h"
+
+//#include "proto.h"
+
+>>>>>>> Stashed changes
 using namespace Display;
 using namespace Render;
 
 namespace Game
 {
+<<<<<<< Updated upstream
 
 //------------------------------------------------------------------------------
 /**
@@ -34,18 +43,11 @@ SpaceGameApp::SpaceGameApp()
 {
     // empty
 }
+=======
+   // extern std::vector<Projectile> projInWorld;
+>>>>>>> Stashed changes
 
-//------------------------------------------------------------------------------
-/**
-*/
-SpaceGameApp::~SpaceGameApp()
-{
-	// empty
-}
 
-//------------------------------------------------------------------------------
-/**
-*/
 bool
 SpaceGameApp::Open()
 {
@@ -55,6 +57,10 @@ SpaceGameApp::Open()
 
     if (this->window->Open())
 	{
+<<<<<<< Updated upstream
+=======
+        //Net::Initialize();
+>>>>>>> Stashed changes
 		// set clear color to gray
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
@@ -180,17 +186,51 @@ SpaceGameApp::Run()
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
 
+<<<<<<< Updated upstream
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
     // game loop
     while (this->window->IsOpen())
 	{
+=======
+    InitAsteroid();
+    InitSkyLight();
+    
+    //WE are going to remove the ssm_instance
+    //ssm_instance.AddSpaceship(1,true); //On player connect in the server (add the connected user)
+
+    std::clock_t c_start = std::clock();
+    float dt = 0.01667f;
+    
+    // game loop
+    while (this->window->IsOpen())
+	{
+        //TESTING THE SERVER RUN LOOP
+        gameServer.Run();
+        gameClient.Update();
+
+        //START OVER WITH THE CONNECTION BRIDGE
+        //clientHost.Poll();
+        //client.Poll();
+
+        ////INPUT LISTENING (only if the client is connected)
+        //if(client.isActive())
+        //{
+        //    if (kbd->pressed[Input::Key::W])
+        //        std::cout << "CLIENT CALLING IN THE LOOP SENDING INPUT PACKET\n";
+        //}
+          
+>>>>>>> Stashed changes
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
+<<<<<<< Updated upstream
+=======
+       // glfwSwapInterval(1);
+>>>>>>> Stashed changes
         
         this->window->Update();
 
@@ -211,7 +251,29 @@ SpaceGameApp::Run()
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
 
+<<<<<<< Updated upstream
         RenderDevice::Draw(ship.model, ship.transform);
+=======
+        for(auto& ship : gameClient.spaceships)
+        {
+            //Make sure only apply camera, client prediction for this controlled client 
+            if (ship.first == gameClient.myPlayerID)
+            {
+                //update this current user controlled avatar
+                ship.second.ProcessInput(); //Handle input for local player
+                if (ship.second.inputState.bitmap != 0) //might  need to reroute this before using
+                    gameClient.SendInput(packet::InputC2S(ship.second.inputState.timeSet, ship.second.inputState.bitmap));
+                ship.second.UpdateLocally(dt); //Predict movement
+                ship.second.UpdateCamera(dt); // only update the local player's camera
+            }
+            else
+            {
+                //update the other connected users movements
+                ship.second.UpdateLocally(dt);
+            }
+            RenderDevice::Draw(ship.second.model, ship.second.transform);
+        }
+>>>>>>> Stashed changes
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);
@@ -244,6 +306,7 @@ SpaceGameApp::RenderUI()
 {
 	if (this->window->IsOpen())
 	{
+<<<<<<< Updated upstream
         ImGui::Begin("Debug");
         Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
         int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
@@ -255,6 +318,76 @@ SpaceGameApp::RenderUI()
         if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId))
             Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
         
+=======
+#ifndef NDEBUG
+        //ImGui::Begin("Debug");
+        //Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
+        //int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
+        //if (ImGui::Checkbox("Draw Light Spheres", (bool*)&drawLightSpheres))
+        //    Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
+        //
+        //Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
+        //int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
+        //if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId))
+        //    Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
+        //
+        //ImGui::End();
+
+        //Debug::DispatchDebugTextDrawing();
+#endif // !DEBUG
+
+        static bool connected = false;
+        static char text[10000];
+        ImGui::Begin("Network Control");
+        ImGui::InputText("Server IP", ipAddress, sizeof(ipAddress));
+
+        if(!connected)
+        {
+            if (ImGui::Button("Host"))
+            {
+                gameServer.StartServer(1234);
+                gameClient.Create();
+                if (gameClient.ConnectToServer(ipAddress, 1234))
+                {
+                    //On success
+                    isHost = true; //This client is the host of the server
+                    connected = true;
+                }
+            }
+
+            if (ImGui::Button("Connect"))
+            {
+                std::cout << "GAMEAPP: CLIENT REQUESTING A CONNECTION TO THE SERVER. NOTE: CLIENT CALL CONNECT() TO ALREADY INITALIZE SERVER\n";
+                gameClient.Create();
+                if (gameClient.ConnectToServer(ipAddress, 1234)) 
+                    connected = true;
+                else
+                    std::cout << "GAMEAPP: Failed to send connection request to server, check if gameclient or gameServer is initalized correctly\n";
+            }
+
+            //ImGui::InputText(" ", text, 10000);
+            //if (ImGui::Button("SEND"))
+            //    client.SendPacket(text, 10000);
+            //Host button
+
+        }
+        else
+        {
+            for (auto& ship : gameClient.spaceships) {
+                ImGui::DragFloat3("Ship position", &ship.second.position[0]);
+                ImGui::DragFloat4("Ship orientation", &ship.second.orientation[0]);
+            }
+
+            for(auto& sShip : gameServer.GetServerShip())
+            {
+                ImGui::DragFloat3("SERVER Ship position", &sShip.second.position[0]);
+                ImGui::DragFloat4("SERVER Ship orientation", &sShip.second.orientation[0]);
+            }
+
+            if (ImGui::Button("Disconnect"))
+                std::cout << "GAMEAPP: CLIENT SEND A DISCONNECT REQUEST TO THE SERVER TO HANDLE\n";
+        }
+>>>>>>> Stashed changes
         ImGui::End();
 
         Debug::DispatchDebugTextDrawing();
