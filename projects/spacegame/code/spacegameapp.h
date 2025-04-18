@@ -9,6 +9,9 @@
 #include "core/app.h"
 #include "render/window.h"
 
+#include "render/model.h"
+#include "physics/physics.h"
+
 namespace Game
 {
 class SpaceGameApp : public Core::App
@@ -30,12 +33,9 @@ private:
 	/// show some ui things
 	void RenderUI();
 
-<<<<<<< Updated upstream
-	Display::Window* window;
-=======
-	void SetupScene();
-	void InitAsteroid();
-	void InitSkyLight();
+	void SetupScene() {};
+	void InitAsteroid() {};
+	void InitSkyLight() {};
 
 	//list of objects
 	std::vector<std::tuple<Render::ModelId, Physics::ColliderId, glm::mat4>> asteroids;
@@ -51,7 +51,5 @@ private:
 
 	//testing the ENet connection
 
-
->>>>>>> Stashed changes
 };
 } // namespace Game

@@ -1,14 +1,10 @@
 #pragma once
 #include "render/model.h"
-<<<<<<< Updated upstream
-=======
 #include "physics/physics.h"
 #include "render/debugrender.h"
 
 #include <iostream>
 #include <vec3.hpp>
-
->>>>>>> Stashed changes
 
 namespace Render
 {
@@ -16,30 +12,8 @@ namespace Render
     struct Camera;
 }
 
-//namespace Physics
-//{
-//    struct ColliderMeshId;
-//    struct ColliderId;
-//}
-
 namespace Game
 {
-
-<<<<<<< Updated upstream
-struct SpaceShip
-{
-    SpaceShip();
-    
-    glm::vec3 position = glm::vec3(0);
-    glm::quat orientation = glm::identity<glm::quat>();
-    glm::vec3 camPos = glm::vec3(0, 1.0f, -2.0f);
-    glm::mat4 transform = glm::mat4(1);
-    glm::vec3 linearVelocity = glm::vec3(0);
-
-    const float normalSpeed = 1.0f;
-    const float boostSpeed = normalSpeed * 2.0f;
-    const float accelerationFactor = 1.0f;
-=======
 //struct Projectile
 //{
 //    glm::vec3 position;
@@ -104,6 +78,8 @@ struct SpaceShip
 //    }; //Destroy the projectile (by time or collided)
 //};
 
+// Setup GameClient & GameServer logic
+
 //Original remove before handing in
 //struct SpaceShip
 //{
@@ -163,11 +139,6 @@ struct SpaceShip
 //}; 
 
 
-//Complete: basic setup network manager
-//TODO BUILD THE NETWORK MANAGER, CLIENT & SERVER LOGIC SIDE
-// Setup GameClient & GameServer logic
-
-
 //CLIENT STATES
 
 struct InputState //PLayer input Data client to server (input updates)
@@ -203,7 +174,6 @@ struct ClientSpaceship
     //Camera 
     Render::Camera* cam;
     glm::vec3 camPos = glm::vec3(0, 1.0f, -2.0f);
->>>>>>> Stashed changes
     const float camOffsetY = 1.0f;
     const float cameraSmoothFactor = 10.0f;
 
@@ -216,28 +186,17 @@ struct ClientSpaceship
     float rotYSmooth = 0;
     float rotZSmooth = 0;
 
-<<<<<<< Updated upstream
-    Render::ModelId model;
-    Render::ParticleEmitter* particleEmitterLeft;
-    Render::ParticleEmitter* particleEmitterRight;
-    float emitterOffset = -0.5f;
-=======
     // Predicted Movement (locally physics & movement)
     glm::vec3 position = glm::vec3(0);
     glm::quat orientation = glm::identity<glm::quat>();
     glm::vec3 linearVelocity = glm::vec3(0);
     glm::mat4 transform = glm::mat4(1);
->>>>>>> Stashed changes
 
     const float normalSpeed = 10.0f;
     const float boostSpeed = normalSpeed * 2.0f;
     const float accelerationFactor = 1.0f;
     float currentSpeed = 0.0f;
 
-<<<<<<< Updated upstream
-    bool CheckCollisions();
-    
-=======
 
     ClientSpaceship() = default; //Default constructor
 
@@ -290,7 +249,6 @@ struct ServerSpaceship
     //Collidermesh should be generate in the server when initalize the player to the game
 
     // Collision
->>>>>>> Stashed changes
     const glm::vec3 colliderEndPoints[8] = {
         glm::vec3(-1.10657, -0.480347, -0.346542),  // right wing
         glm::vec3(1.10657, -0.480347, -0.346542),  // left wing
@@ -301,8 +259,6 @@ struct ServerSpaceship
         glm::vec3(-0.279064, -0.10917, -0.98846),   // right back
         glm::vec3(0.279064, -0.10917, -0.98846)   // left back
     };
-<<<<<<< Updated upstream
-=======
 
     ServerSpaceship() = default;
     ServerSpaceship(uint32_t spaceshipID) : id(spaceshipID){}
@@ -310,7 +266,6 @@ struct ServerSpaceship
     void Update(float dt); //updates spaceship movement
     bool CheckCollision(); //validate collisions 
     void SyncWithClient(); //synchronize with the clients
->>>>>>> Stashed changes
 };
 
 

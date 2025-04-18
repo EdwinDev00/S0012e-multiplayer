@@ -13,40 +13,28 @@
 #include "render/model.h"
 #include "render/cameramanager.h"
 #include "render/lightserver.h"
-#include "render/debugrender.h"
 #include "core/random.h"
-#include "render/input/inputserver.h"
-#include "core/cvar.h"
-#include "render/physics.h"
-#include <chrono>
-#include "spaceship.h"
+#include "input/inputserver.h"
 
-<<<<<<< Updated upstream
-=======
-#include "../engine/network/server.h"
-#include "../engine/network/client.h"
+//#include "render/debugrender.h"
+
+#include "core/cvar.h"
+
+#include <chrono>
+//#include "spaceship.h"
+
+#include "network/server.h"
+#include "network/client.h"
 
 //#include "proto.h"
 
->>>>>>> Stashed changes
 using namespace Display;
 using namespace Render;
 
 namespace Game
 {
-<<<<<<< Updated upstream
 
-//------------------------------------------------------------------------------
-/**
-*/
-SpaceGameApp::SpaceGameApp()
-{
-    // empty
-}
-=======
    // extern std::vector<Projectile> projInWorld;
->>>>>>> Stashed changes
-
 
 bool
 SpaceGameApp::Open()
@@ -57,10 +45,6 @@ SpaceGameApp::Open()
 
     if (this->window->Open())
 	{
-<<<<<<< Updated upstream
-=======
-        //Net::Initialize();
->>>>>>> Stashed changes
 		// set clear color to gray
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
@@ -183,19 +167,9 @@ SpaceGameApp::Run()
         lights[i] = Render::LightServer::CreatePointLight(translation, color, Core::RandomFloat() * 4.0f, 1.0f + (15 + Core::RandomFloat() * 10.0f));
     }
 
-    SpaceShip ship;
-    ship.model = LoadModel("assets/space/spaceship.glb");
 
-<<<<<<< Updated upstream
-    std::clock_t c_start = std::clock();
-    double dt = 0.01667f;
-
-    // game loop
-    while (this->window->IsOpen())
-	{
-=======
-    InitAsteroid();
-    InitSkyLight();
+    /*InitAsteroid();
+    InitSkyLight();*/
     
     //WE are going to remove the ssm_instance
     //ssm_instance.AddSpaceship(1,true); //On player connect in the server (add the connected user)
@@ -210,27 +184,15 @@ SpaceGameApp::Run()
         gameServer.Run();
         gameClient.Update();
 
-        //START OVER WITH THE CONNECTION BRIDGE
-        //clientHost.Poll();
-        //client.Poll();
-
-        ////INPUT LISTENING (only if the client is connected)
-        //if(client.isActive())
-        //{
-        //    if (kbd->pressed[Input::Key::W])
-        //        std::cout << "CLIENT CALLING IN THE LOOP SENDING INPUT PACKET\n";
-        //}
           
->>>>>>> Stashed changes
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
-<<<<<<< Updated upstream
-=======
+
        // glfwSwapInterval(1);
->>>>>>> Stashed changes
+
         
         this->window->Update();
 
@@ -238,9 +200,6 @@ SpaceGameApp::Run()
         {
             ShaderResource::ReloadShaders();
         }
-
-        ship.Update(dt);
-        ship.CheckCollisions();
 
         // Draw some debug text
         Debug::DrawDebugText("FOOBAR", glm::vec3(0), {1,0,0,1});
@@ -251,9 +210,7 @@ SpaceGameApp::Run()
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
 
-<<<<<<< Updated upstream
-        RenderDevice::Draw(ship.model, ship.transform);
-=======
+
         for(auto& ship : gameClient.spaceships)
         {
             //Make sure only apply camera, client prediction for this controlled client 
@@ -273,7 +230,6 @@ SpaceGameApp::Run()
             }
             RenderDevice::Draw(ship.second.model, ship.second.transform);
         }
->>>>>>> Stashed changes
 
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);
@@ -306,19 +262,6 @@ SpaceGameApp::RenderUI()
 {
 	if (this->window->IsOpen())
 	{
-<<<<<<< Updated upstream
-        ImGui::Begin("Debug");
-        Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
-        int drawLightSpheres = Core::CVarReadInt(r_draw_light_spheres);
-        if (ImGui::Checkbox("Draw Light Spheres", (bool*)&drawLightSpheres))
-            Core::CVarWriteInt(r_draw_light_spheres, drawLightSpheres);
-        
-        Core::CVar* r_draw_light_sphere_id = Core::CVarGet("r_draw_light_sphere_id");
-        int lightSphereId = Core::CVarReadInt(r_draw_light_sphere_id);
-        if (ImGui::InputInt("LightSphereId", (int*)&lightSphereId))
-            Core::CVarWriteInt(r_draw_light_sphere_id, lightSphereId);
-        
-=======
 #ifndef NDEBUG
         //ImGui::Begin("Debug");
         //Core::CVar* r_draw_light_spheres = Core::CVarGet("r_draw_light_spheres");
@@ -387,7 +330,7 @@ SpaceGameApp::RenderUI()
             if (ImGui::Button("Disconnect"))
                 std::cout << "GAMEAPP: CLIENT SEND A DISCONNECT REQUEST TO THE SERVER TO HANDLE\n";
         }
->>>>>>> Stashed changes
+
         ImGui::End();
 
         Debug::DispatchDebugTextDrawing();
